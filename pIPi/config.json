@@ -2,8 +2,5 @@
    "t_in_s": 5,
    "ip":"192.168.1.1",
    "recipient_email":"kein-kommentar@gmx.at",
-   "sender_email":"",
-   "sender_password":"",
-   "smpt_host":"smtp-mail.outlook.com",
-   "smpt_port":465
+   "message_sub":"Dein Server ist Tot"
 }

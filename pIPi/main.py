@@ -1,9 +1,8 @@
 import platform     # For getting the operating system name
 import subprocess   # For executing a shell command
 import json         # For getting and parsing json
-import smtplib      # For sending Mail
-from email.message import EmailMessage
-import time         # For sleep
+import time
+import win32com.client as win32
 
 
 def ping(host):
@@ -25,8 +24,8 @@ def ping(host):
 def get_json(file):
     """
     Opens file (str) if exist
-    reads it's and returns the text
-    :return: str
+    reads it's and returns the data
+    :return: json
     """
 
     # Opening JSON file
@@ -42,40 +41,64 @@ def get_json(file):
     return data
 
 
+
+def get_message(file):
+    """
+    Opens file (str) if exist
+    reads it's and returns the data
+    :return: html
+    """
+
+    # Opening JSON file
+    f = open(file)
+
+    # Get the html
+    data = f.read()
+
+    # Closing file
+    f.close()
+
+    return data
+
+
+
 def send_mail(data):
+    """
+    Sends the Mail to the address that is stored in data (json)
+    Outlook is req to be running
+    """
 
-    sender = data['sender_email']
-    password = data['sender_password']
+    # gets the recipient mail address from data
     recipient = data['recipient_email']
-    host = data['smpt_host']
-    port = data['smpt_port']
 
-    msg_body = 'Email sent using outlook!'
+    # opens an outlook instance
+    outlook = win32.Dispatch('outlook.application')
+    mail = outlook.CreateItem(0)
 
-    # action
-    msg = EmailMessage()
-    msg['subject'] = 'Email sent using outlook.'
-    msg['from'] = sender
-    msg['to'] = recipient
-    msg.set_content(msg_body)
+    # crafts the mail
+    mail.To = recipient
+    mail.Subject = data['message_sub']
+    mail.HTMLBody = get_message('message.html')
 
-    with smtplib.SMTP_SSL(host, port) as smtp:
-        smtp.login(sender, password)
+    mail.Send()
 
-        smtp.send_message(msg)
 
 
 if __name__ == '__main__':
 
+    # get data from file
     data = get_json("config.json")
     ip = data['ip']
     t = data['t_in_s']
-    """
+
+    # checks if file died
     while True:
-        time.sleep(t)
+
         if not ping(ip):
             send_mail(data)
             break
-    """
-    send_mail(data)
 
+        time.sleep(t)
+
+
+    input("Press Enter to continue...")
