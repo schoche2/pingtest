@@ -20,7 +20,6 @@ def ping(host):
     return subprocess.call(command) == 0
 
 
-
 def get_json(file):
     """
     Opens file (str) if exist
@@ -41,6 +40,15 @@ def get_json(file):
     return data
 
 
+def write_json(data, file):
+    """
+    writes data (json obj) to file (str)
+    atse
+    """
+
+    with open(file, "w") as outfile:
+        json.dump(data, outfile)
+
 
 def get_message(file):
     """
@@ -59,7 +67,6 @@ def get_message(file):
     f.close()
 
     return data
-
 
 
 def send_mail(data):
@@ -83,13 +90,57 @@ def send_mail(data):
     mail.Send()
 
 
-
 if __name__ == '__main__':
 
-    # get data from file
-    data = get_json("config.json")
-    ip = data['ip']
-    t = data['t_in_s']
+    version = '1.0'
+    config_file = 'config.json'
+
+    print("welcome to iIPi version " + version)
+
+    while True:
+
+        print("would you like to use the last settings?")
+        print("(yes/no)")
+        userinput = input()
+        userinput.lower()
+
+        if userinput == 'y' or userinput == 'yes':
+
+            print('using old input')
+
+            # get data from file
+
+            data = get_json(config_file)
+            ip = data['ip']
+            t = data['t_in_s']
+            r_mail = data['recipient_email']
+
+            print('IP address:  ' + ip)
+            print('test time:   ' + str(t))
+            print('email:       ' + r_mail)
+
+            break
+
+        elif userinput == 'n' or userinput == 'no':
+
+            print('enter new input')
+
+            ip = input('enter IP: ')
+            ip = int(ip)
+            t = input('enter test time: ')
+            r_mail = input('email: ')
+
+            data = get_json(config_file)
+            data['ip'] = ip
+            data['t_in_s'] = t
+            data['recipient_email'] = r_mail
+
+            write_json(data, config_file)
+            break
+
+        else:
+
+            print('invalid input')
 
     # checks if file died
     while True:
@@ -99,6 +150,5 @@ if __name__ == '__main__':
             break
 
         time.sleep(t)
-
 
     input("Press Enter to continue...")
