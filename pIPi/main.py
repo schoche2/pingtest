@@ -69,11 +69,15 @@ def get_message(file):
     return data
 
 
-def send_mail(data):
+def send_mail(data, online):
     """
     Sends the Mail to the address that is stored in data (json)
     Outlook is req to be running
     """
+
+    if not sending:
+        print("no mail was send. you are in debug mode!")
+        return
 
     # gets the recipient mail address from data
     recipient = data['recipient_email']
@@ -85,7 +89,12 @@ def send_mail(data):
     # crafts the mail
     mail.To = recipient
     mail.Subject = data['message_sub']
-    mail.HTMLBody = get_message('message.html')
+
+    if online:
+        mail.HTMLBody = get_message('message_down.html')
+    else:
+        mail.HTMLBody = get_message('message_up.html')
+
 
     mail.Send()
 
@@ -94,6 +103,7 @@ if __name__ == '__main__':
 
     version = '1.0'
     config_file = 'config.json'
+    sending = False
 
     print("welcome to iIPi version " + version)
 
@@ -126,8 +136,8 @@ if __name__ == '__main__':
             print('enter new input')
 
             ip = input('enter IP: ')
-            ip = int(ip)
             t = input('enter test time: ')
+            t = int(t)
             r_mail = input('email: ')
 
             data = get_json(config_file)
@@ -135,20 +145,44 @@ if __name__ == '__main__':
             data['t_in_s'] = t
             data['recipient_email'] = r_mail
 
-            write_json(data, config_file)
+            print('you want to safe the data to the config file?')
+            userinput = input("(yes/no)")
+            userinput.lower()
+
+            if userinput == 'y' or userinput == 'yes':
+                print('saving input')
+                write_json(data, config_file)
+            else:
+                print('not saving input')
+
             break
 
         else:
 
             print('invalid input')
 
+    print('-------------------------------')
+    print('starting pinging')
+    print('-------------------------------')
+
     # checks if file died
+    online = True
     while True:
 
-        if not ping(ip):
-            send_mail(data)
-            break
+        # when ping fails and server should be on
+        if not ping(ip) and online:
+            send_mail(data, online)
+            print('-------------------------------')
+            print("Server is down")
+            print('-------------------------------')
+            online = False
+
+        # when ping succeeds and server was down
+        if ping(ip) and not online:
+            send_mail(data, online)
+            print('-------------------------------')
+            print("Server is up")
+            print('-------------------------------')
+            online = True
 
         time.sleep(t)
-
-    input("Press Enter to continue...")
