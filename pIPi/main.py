@@ -1,8 +1,9 @@
-import platform     # For getting the operating system name
-import subprocess   # For executing a shell command
-import json         # For getting and parsing json
-import time
-import win32com.client as win32
+import platform                         # For getting the operating system name
+import subprocess                       # For executing a shell command
+import json                             # For getting and parsing json
+import time                             # For sleep
+import win32com.client as win32         # For using outlook
+import datetime                         # For getting logtime
 
 
 def ping(host):
@@ -43,18 +44,17 @@ def get_json(file):
 def write_json(data, file):
     """
     writes data (json obj) to file (str)
-    atse
     """
 
     with open(file, "w") as outfile:
         json.dump(data, outfile)
 
 
-def get_message(file):
+def read_file(file):
     """
     Opens file (str) if exist
     reads it's and returns the data
-    :return: html
+    :return: str
     """
 
     # Opening JSON file
@@ -72,7 +72,7 @@ def get_message(file):
 def send_mail(data, online):
     """
     Sends the Mail to the address that is stored in data (json)
-    Outlook is req to be running
+    Outlook has to be installed
     """
 
     if not sending:
@@ -82,28 +82,48 @@ def send_mail(data, online):
     # gets the recipient mail address from data
     recipient = data['recipient_email']
 
-    # opens an outlook instance
-    outlook = win32.Dispatch('outlook.application')
-    mail = outlook.CreateItem(0)
+    try:
+        # opens an outlook instance
+        outlook = win32.Dispatch('outlook.application')
+        mail = outlook.CreateItem(0)
 
-    # crafts the mail
-    mail.To = recipient
-    mail.Subject = data['message_sub']
+        # crafts the mail
+        mail.To = recipient
+        mail.Subject = data['message_sub']
 
-    if online:
-        mail.HTMLBody = get_message('message_down.html')
-    else:
-        mail.HTMLBody = get_message('message_up.html')
+        if online:
+            mail.HTMLBody = read_file('message_down.html')
+        else:
+            mail.HTMLBody = read_file('message_up.html')
+
+        mail.Send()
+        print('mail was sent to : ' + recipient)
+
+    except:
+        print('sending the mail to ' + recipient + ' failed')
 
 
-    mail.Send()
+def log(message):
+    """
+    logs a message (str) to the logfile with the current timestamp
+    """
+
+    time = str(datetime.datetime.now())
+
+    f = open("log.txt", "a")
+
+    f.write(time + ' ' + message + '\n')
+
+    f.close()
 
 
 if __name__ == '__main__':
 
+    log('program started')
+
     version = '1.0'
     config_file = 'config.json'
-    sending = False
+    sending = True
 
     print("welcome to iIPi version " + version)
 
@@ -146,7 +166,7 @@ if __name__ == '__main__':
             data['recipient_email'] = r_mail
 
             print('you want to safe the data to the config file?')
-            userinput = input("(yes/no)")
+            userinput = input("type yes to save yes")
             userinput.lower()
 
             if userinput == 'y' or userinput == 'yes':
@@ -171,6 +191,7 @@ if __name__ == '__main__':
 
         # when ping fails and server should be on
         if not ping(ip) and online:
+            log('Server is down')
             send_mail(data, online)
             print('-------------------------------')
             print("Server is down")
@@ -179,6 +200,7 @@ if __name__ == '__main__':
 
         # when ping succeeds and server was down
         if ping(ip) and not online:
+            log('Server is up')
             send_mail(data, online)
             print('-------------------------------')
             print("Server is up")
