@@ -1,6 +1,6 @@
 {
    "t_in_s": 5,
-   "ip":"192.168.1.23",
-   "recipient_email":"kein-kommentar@gmx.at",
-   "message_sub":"Dein Server ist Tot"
+   "ip":"",
+   "recipient_email":"",
+   "message_sub":"ServerStatus"
 }

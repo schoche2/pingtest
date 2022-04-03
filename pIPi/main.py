@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
     log('program started')
 
-    version = '1.0'
+    version = '1.1'
     config_file = 'config.json'
     sending = True
 
